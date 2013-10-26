@@ -118,7 +118,7 @@ for names in reader:
 		releasedate = datadata[24].renderContents().strip()    
 		releasetype = datadata[25].renderContents().strip()    
 		
-        # the table with offense information
+        # the table with  information about the crimes
 		offensedata = soup.findAll('td', class_='tableData')[::2]
 		tablength = len(offensedata)
 		g = 0
