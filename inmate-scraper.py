@@ -1,6 +1,6 @@
 """
 
-Given a list of names, extract records from the Nebraska DOC inmate search dooder-bop thingamajig skideela bi di bi di do bap do.
+Given a list of names, extract prison records from the Nebraska DOC inmate search dooder-bop thingamajig skideela bi di bi di do bap do.
 
 """
 
@@ -12,8 +12,8 @@ import re
 # open the file to write to
 f = open('timeserved.txt', 'wb')
 
-# add headers
-f.write("lastname|firstname|middle|crimes|gender|race|dob|county|startsentence|endsentence|sentencebegan|projectedrelease|goodtimedays|paroleeligibility|paroledischarge|releasedate|releasetype|mugurl\n")
+# add headers to file
+f.write("lastname|firstname|middle|crimes|gender|race|dob|startsentence|endsentence|sentencebegin|projectedrelease|goodtimedays|paroleeligibility|paroledischarge|releasedate|releasetype|mug\n")
 
 # crank up a browser
 mech = Browser()
@@ -25,10 +25,10 @@ mech.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.
 mech.set_handle_robots(False)
 
 # define opening url
-url = "http://dcs-inmatesearch.ne.gov/Corrections/COR_input.html"
+baseurl = "http://dcs-inmatesearch.ne.gov/Corrections/COR_input.html"
 
 # beautifulsoup that bizzo
-page = mech.open(url)
+page = mech.open(baseurl)
 html = page.read()
 soup = BeautifulSoup(html)
 
@@ -43,31 +43,31 @@ while k < length:
 	lname = names[k][0]
 	fname = names[k][1]
 	
-	# select the correct form
+	# select the correct form on the page
 	mech.select_form(nr=0)
 	
 	# fill out the form
 	mech.form['LastName'] = lname
 	mech.form['FirstName'] = fname
 	
-	# submit it, read in the results page
+	# submit, read in the results page
 	req = mech.submit()
 	resultspage = req.read()
 	
-	#soup up results page
+	#soup the results page
 	soup = BeautifulSoup(resultspage)
 	
 	# check to see if the search returned any records
 	error = re.compile(r'The name was not found')
 	if error.search(str(soup)):
-		print 'This peep ain\'t err been in the joint. Trying the next name ...\n'
+		print 'Sez ' + fname + ' ' + lname + ' ain\'t err been in the joint. Trying the next one ...\n'
 		k += 1
 		sleep(3)
 		mech.back()
 		continue
 	else:
 		pass
-		print 'Inmate found. Pulling in records now...\n'
+		print 'Inmate found. Slurping data now...'
 	
 	# if search was successful, append links to a list
 	stints = []
@@ -85,7 +85,7 @@ while k < length:
 		lastname = datadata[0].renderContents().strip()
 		firstname = datadata[1].renderContents().strip()
 		middle = datadata[2].renderContents().strip()
-		print 'Pulling data for ' + firstname + " " + lastname
+		print 'Pulling record for ' + firstname + " " + lastname
 		
         # get the mugshot
 		muglist = [x['src'] for x in soup.findAll('img', {'alt': 'Inmate Image'})]
@@ -126,16 +126,23 @@ while k < length:
 		g = 0
 		crimelist = []
         while g < tablength:
-            crimes.append(offensedata[g].renderContents().strip())
+            crimelist.append(offensedata[g].renderContents().strip())
             g += 3
-		crimes = ", ".join(crimelist)
-		fullrecord = (lastname, firstname, middle, crimes, gender, race, dob, county, startsentence, endsentence, sentencebegin, projectedrelease, goodtimedays, paroleeligibility, paroledischarge, releasedate, releasetype, mug, "\n")
-		f.write("|".join(fullrecord))
-		print "Success! Record written. Going back for more..."
-		mech.back()
-		
+        crimes = ", ".join(crimelist)
+        fullrecord = (lastname, firstname, middle, crimes, gender, race, dob, startsentence, endsentence, sentencebegin, projectedrelease, goodtimedays, paroleeligibility, paroledischarge, releasedate, releasetype, mug, "\n")
+        
+        # write it to a file
+        f.write("|".join(fullrecord))
+        print "Success! Record written. Going back for more...\n"
+        
+        # navigate back
+        mech.back()
+        sleep(3)
+    
+	page = mech.open(baseurl)
+	html = page.read()
+	soup = BeautifulSoup(html)
 	sleep(3)
-	mech.back()
 	k += 1
 
 f.close()
