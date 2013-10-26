@@ -33,8 +33,7 @@ page = mech.open(baseurl)
 html = page.read()
 soup = BeautifulSoup(html)
 
-# read in the names from csv
-
+# read in names from cs
 ifile  = open('names.txt', "rb")
 reader = csv.reader(ifile)
 
