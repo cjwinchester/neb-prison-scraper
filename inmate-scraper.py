@@ -8,6 +8,7 @@ from mechanize import Browser
 from bs4 import *
 from time import *
 import re
+import csv
 
 # open the file to write to
 f = open('timeserved.txt', 'wb')
@@ -32,17 +33,15 @@ page = mech.open(baseurl)
 html = page.read()
 soup = BeautifulSoup(html)
 
-# the names (todo: config for csv input)
-names = [('JENKINS','ERICA'),('SAYLES','LORI'),('JENKINS','LORI'),('JENKINS','MELONIE'),('MAGEE','DAVID'),('BORDEAUX','CHRISTINE'),('JENKINS','CHALONDA'),('LEVERING','JIMMY'),('WELLS','ANTHONY'),('LEVERING','MERWYN'),('LEVERING','GARLAND'),('LEVERING','ROBERT'),('JENKINS','JEFFREY'),('LEVERING','MICHAELA'),('BORDEAUX','LUCILLE'),('LEVERING','IDA'),('LEVERING','TONI'),('LEVERING','DESIREE'),('LEVERING','DEXTER'),('BORDEAUX','DAVID'),('LEVERING','SONIA'),('LEVERING','TONIA'),('JENKINS','SOPHIA') ]
+# read in the names from csv
 
-length = len(names)
+ifile  = open('names.txt', "rb")
+reader = csv.reader(ifile)
 
-# loop through names
-k = 0
-while k < length:
-	lname = names[k][0]
-	fname = names[k][1]
-	
+for names in reader:
+	lname = names[0]
+	fname = names[1]
+
 	# select the correct form on the page
 	mech.select_form(nr=0)
 	
@@ -61,7 +60,6 @@ while k < length:
 	error = re.compile(r'The name was not found')
 	if error.search(str(soup)):
 		print 'Sez ' + fname + ' ' + lname + ' ain\'t err been in the joint. Trying the next one ...\n'
-		k += 1
 		sleep(3)
 		mech.back()
 		continue
@@ -143,6 +141,5 @@ while k < length:
 	html = page.read()
 	soup = BeautifulSoup(html)
 	sleep(3)
-	k += 1
 
 f.close()
